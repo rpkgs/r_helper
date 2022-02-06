@@ -1,0 +1,82 @@
+---
+title: "rast array"
+output: 
+  github_document:
+    number_sections: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+    fig.path  = "image/sp01_rast_array/",
+    echo = TRUE, 
+    comment = "#")
+```
+
+# `rast` array
+
+```{r message=FALSE}
+library(sf2)
+library(terra)
+library(fields)
+library(magrittr)
+
+ext2bbox <- function(x, ...) as.vector(ext(x, ...))
+```
+
+>为了更好的理解R语言中空间数据的排列顺序。
+
+为了便于记忆，无论是`SpatialGridDataFrame`、`SpatialPixelsDataframe`， arr是image.plot中绘图看起来正确的matrix或者3d array。
+
+```{r rast_elev}
+# Create a SpatRaster from a file
+f <- system.file("ex/elev.tif", package="terra")
+r <- rast(f)
+plot(r)
+
+## 1. arr
+par(mar = c(3, 3, 0, 0))
+arr = rast_array(r)
+arr %>% image.plot()
+image(arr)
+```
+
+## `rast` array
+arr中的数据，绘图展示的顺序与print中展示的顺序完全一致。
+
+```{r rast_mat}
+mat = matrix(1:16, nrow = 4, byrow = TRUE)
+print(mat)
+r = raster::raster(mat)
+plot(r)
+
+g = as_SpatialGridDataFrame(r)
+all.equal(as.data.frame(r), g@data)
+
+all.equal(values(r), as.numeric(mat %>% t()))
+```
+
+## `sp` numeric order
+
+```{r rast_gdal}
+g = rgdal::readGDAL(f) # wierd order
+plot(g)
+
+all.equal(g$band1, as.numeric(Ipaper::flipud(arr)))
+summary(g$band1 - as.numeric(Ipaper::flipud(arr)))
+```
+
+## `sf2` make_grid
+
+```{r rast-make_grid-mat}
+cellsize = g@grid@cellsize
+
+g2 = make_grid(ext2bbox(g), cellsize)
+g2@data = data.frame(x = as.numeric(arr))
+plot(g2)
+```
+
+```{r rast-make_grid-vec}
+g_vec = make_grid(ext2bbox(g), cellsize, type = "vec")
+g_vec@data = data.frame(x = as.numeric(arr %>% Ipaper::flipud()))
+plot(g_vec)
+```
