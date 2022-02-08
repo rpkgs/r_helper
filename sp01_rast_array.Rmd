@@ -25,8 +25,6 @@ ext2bbox <- function(x, ...) as.vector(ext(x, ...))
 
 >为了更好的理解R语言中空间数据的排列顺序。
 
-为了便于记忆，无论是`SpatialGridDataFrame`、`SpatialPixelsDataframe`， arr是image.plot中绘图看起来正确的matrix或者3d array。
-
 ```{r rast_elev}
 # Create a SpatRaster from a file
 f <- system.file("ex/elev.tif", package="terra")
@@ -35,7 +33,7 @@ plot(r)
 
 ## 1. arr
 par(mar = c(3, 3, 0, 0))
-arr = rast_array(r)
+arr = rast_array(r)[,,1]
 arr %>% image.plot()
 image(arr)
 ```
@@ -63,20 +61,4 @@ plot(g)
 
 all.equal(g$band1, as.numeric(Ipaper::flipud(arr)))
 summary(g$band1 - as.numeric(Ipaper::flipud(arr)))
-```
-
-## `sf2` make_grid
-
-```{r rast-make_grid-mat}
-cellsize = g@grid@cellsize
-
-g2 = make_grid(ext2bbox(g), cellsize)
-g2@data = data.frame(x = as.numeric(arr))
-plot(g2)
-```
-
-```{r rast-make_grid-vec}
-g_vec = make_grid(ext2bbox(g), cellsize, type = "vec")
-g_vec@data = data.frame(x = as.numeric(arr %>% Ipaper::flipud()))
-plot(g_vec)
 ```
